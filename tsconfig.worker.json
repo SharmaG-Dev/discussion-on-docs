@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist-workers",
+    "rootDir": "./src",
+    "module": "commonjs",
+    "target": "ES2020",
+    "noEmit": false
+  },
+  "include": ["src/lib/worker/**/*", "src/lib/**/*"],
+  "exclude": ["node_modules", ".next"]
+}

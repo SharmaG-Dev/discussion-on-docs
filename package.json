@@ -1,0 +1,48 @@
+{
+  "name": "discussondocs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "worker:build": "tsc -p tsconfig.worker.json",
+    "worker:start": "node dist-workers/lib/worker/upload.worker.js",
+    "worker": "tsx -r tsconfig-paths/register src/lib/workers/upload.worker.ts"
+  },
+  "dependencies": {
+    "@langchain/community": "^1.1.28",
+    "@langchain/core": "^1.1.47",
+    "@langchain/openai": "^1.4.5",
+    "@langchain/textsplitters": "^1.0.1",
+    "@reduxjs/toolkit": "^2.12.0",
+    "@types/dotenv": "^6.1.1",
+    "@types/uuid": "^10.0.0",
+    "bullmq": "^5.76.10",
+    "chromadb": "^3.4.3",
+    "cloudinary": "^2.10.0",
+    "dotenv": "^17.4.2",
+    "ioredis": "^5.10.1",
+    "lucide-react": "^1.14.0",
+    "next": "16.2.6",
+    "pdf-parse": "^1.1.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-redux": "^9.3.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "tailwindcss": "^4",
+    "tsconfig-paths": "^4.2.0",
+    "tsx": "^4.22.1",
+    "typescript": "^5"
+  }
+}

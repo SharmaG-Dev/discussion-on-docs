@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+
+  --color-primary: #e94057;
+  --color-primary-foreground: #fdecef;
+  --color-secondary: #f3f3f3;
+  --color-secondary-foreground: #adafbb;
+  --color-border: #e8e6ea;
+  --color-text: #4d4d4d;
+  --color-dark: #000000;
+  --color-light: #ffffff;
+  --color-destructive: rgb(201, 45, 45);
+  --color-success: #5cb85c;
+  --color-warning: #efbf04;
+  --color-info: #0f4b9b;
+  --font-pacifico: "Pacifico", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+}
+
+.dark {
+  --color-background: #121212;
+  --color-foreground: #f1f5f9;
+
+  --color-primary: #ff4d6d;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #252525;
+  --color-secondary-foreground: #cbd5e1;
+
+  --color-border: #303030;
+  --color-text: #e2e8f0;
+  --color-dark: #000000;
+  --color-light: #ffffff;
+  --color-destructive: rgb(201, 45, 45);
+  --color-success: #5cb85c;
+  --color-warning: #efbf04;
+  --color-info: #0f4b9b;
+  --font-poppins: "Poppins", sans-serif; /* Fixed typo from user snippet where this was Pacifico */
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+* {
+  @apply font-poppins;
+}
+
+@keyframes spin-smooth {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-smooth {
+  animation: spin-smooth 0.9s ease-in-out infinite;
+}
+
+.tiptap {
+  @apply focus-visible:outline-none min-h-20;
+}
