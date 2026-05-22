@@ -49,15 +49,8 @@ export const uploadApi = baseApi.injectEndpoints({
         body: { id },
       }),
       invalidatesTags: [{ type: "Uploads", id: "LIST" }],
-    }),
-    askQuestion: build.mutation<{ success: boolean; answer: string; docs?: any[] }, { question: string; collectionId: string }>({
-      query: ({ question, collectionId }) => ({
-        url: "/api/chat",
-        method: "POST",
-        body: { question, collectionId },
-      }),
     })
   }),
 })
 
-export const { useGetUploadsQuery, useUploadFileMutation, useDeleteFileMutation, useAskQuestionMutation } = uploadApi
+export const { useGetUploadsQuery, useUploadFileMutation, useDeleteFileMutation } = uploadApi

@@ -11,17 +11,9 @@ interface SidebarProps {
   onFileUpload: (files: FileList) => void;
   uploadedFiles: UploadRecord[];
   isUploading: boolean;
-  activeFileId: string | null;
-  onSelectFile: (id: string) => void;
 }
 
-export default function Sidebar({
-  onFileUpload,
-  uploadedFiles,
-  isUploading,
-  activeFileId,
-  onSelectFile,
-}: SidebarProps) {
+export default function Sidebar({ onFileUpload, uploadedFiles, isUploading }: SidebarProps) {
   const [dragActive, setDragActive] = useState(false);
   const [deleteFile, { isLoading: isDeleting }] = useDeleteFileMutation()
   const handleDrag = (e: React.DragEvent) => {
@@ -113,40 +105,27 @@ export default function Sidebar({
         {isUploaded && (
           <div className="mt-4">
             <h3 className="text-sm font-medium text-text mb-2">Uploaded Files</h3>
-            <div className="space-y-2 max-h-48 overflow-y-auto animate-fade-in">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
               {uploadedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  onClick={() => file.isReady && onSelectFile(file.id)}
-                  className={`flex items-center justify-between p-2.5 rounded-xl transition-all ${
-                    file.isReady
-                      ? "cursor-pointer hover:bg-secondary/60"
-                      : "opacity-80"
-                  } ${
-                    file.id === activeFileId
-                      ? "bg-primary/10 border border-primary/40 shadow-sm ring-1 ring-primary/20"
-                      : "bg-secondary border border-border/50"
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 overflow-hidden flex-1">
-                    <FileText className={`h-5 w-5 ${file.id === activeFileId ? "text-primary" : "text-secondary-foreground"}`} />
-                    <div className="min-w-0 flex-1">
-                      <div className={`text-sm font-medium truncate ${file.id === activeFileId ? "text-primary" : "text-text"}`} title={file.originalName}>
+                <div key={index} className="flex items-center justify-between p-2 bg-secondary rounded-lg">
+                  <div className="flex items-center space-x-2 overflow-hidden">
+                    <FileText className="h-5 w-5 text-secondary-foreground" />
+                    <div className="min-w-0">
+                      <div className="text-sm text-text truncate" title={file.originalName}>
                         {file.originalName}
                       </div>
                       <div className="text-xs text-secondary-foreground truncate">
-                        {file.status !== "Failed" ? file.status : `${file.status}: ${file.error}`}
+                        {file.status !== "Failed" ? file.status : `${file.status}:${file.error}`}
                       </div>
                     </div>
                   </div>
                   <button
-                    className="text-secondary-foreground hover:text-destructive transition-colors ml-2 p-1 rounded-md hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteFile(file.id);
+                    className="text-secondary-foreground hover:text-destructive transition-colors"
+                    onClick={() => {
+                      deleteFile(file.id)
                     }}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
               ))}

@@ -3,36 +3,45 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
-        const { question, collectionId } = body;
+        const { question, userId } = await req.json();
 
-        if (!question || !collectionId) {
+        if (!question) {
             return NextResponse.json(
-                { success: false, error: "Missing question or collectionId" },
+                { error: "Question is required" },
                 { status: 400 }
             );
         }
 
-        const result = await retrievalResponseTools.askQuestion(question, collectionId);
+        if (!userId) {
+            return NextResponse.json(
+                { error: "UserId is required" },
+                { status: 400 }
+            );
+        }
 
-        let answerText = "";
-        if (typeof result.answer === "string") {
-            answerText = result.answer;
-        } else if (result.answer && typeof result.answer === "object" && "content" in result.answer) {
-            answerText = String(result.answer.content);
-        } else {
-            answerText = JSON.stringify(result.answer);
+        // Call the retrieval and question answering tool
+        const result = await retrievalResponseTools.askQuestion(question, userId);
+
+        let answer = "";
+        if (result && result.answer) {
+            if (typeof result.answer === "string") {
+                answer = result.answer;
+            } else if (typeof result.answer === "object" && "content" in result.answer) {
+                answer = result.answer.content as string;
+            } else {
+                answer = JSON.stringify(result.answer);
+            }
         }
 
         return NextResponse.json({
             success: true,
-            answer: answerText,
-            docs: result.docs
+            answer,
+            docs: result.docs,
         });
     } catch (error: any) {
-        console.error("Chat API Error:", error);
+        console.error("Error in /api/chat:", error);
         return NextResponse.json(
-            { success: false, error: error?.message || "Internal Server Error" },
+            { error: error?.message || "Failed to retrieve answer" },
             { status: 500 }
         );
     }

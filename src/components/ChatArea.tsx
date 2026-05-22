@@ -1,62 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { MessageSquare, Send, Loader2, Bot } from "lucide-react";
-import { useAskQuestionMutation } from "@/store/api/uploadApi";
-import { UploadRecord } from "@/lib/uploadsStatus";
+import { MessageSquare, Send } from "lucide-react";
+import { useAuth } from "@/providers/useAuth";
+import { useAskQuestionMutation } from "@/store/api/chatApi";
 
 interface ChatAreaProps {
   isUploaded: boolean;
-  activeFile?: UploadRecord;
 }
 
-export default function ChatArea({ isUploaded, activeFile }: ChatAreaProps) {
+export default function ChatArea({ isUploaded }: ChatAreaProps) {
+  const auth = useAuth();
+  const userId = auth?.user?.id || "unknown-user";
+  const [askQuestion, { isLoading: isResponding }] = useAskQuestionMutation();
+
   const [messages, setMessages] = useState<Array<{ role: "user" | "ai"; content: string }>>([
-    { role: "ai", content: "Hi! Upload a document and select it in the sidebar to start discussing." }
+    { role: "ai", content: "Let's discuss what you want? about this document" }
   ]);
   const [input, setInput] = useState("");
-  const [askQuestion, { isLoading: isAiTyping }] = useAskQuestionMutation();
-
-  // Watch for active file changes to reset or initialize chat thread
-  const [lastFileId, setLastFileId] = useState<string | null>(null);
-
-  if (activeFile && activeFile.id !== lastFileId) {
-    setLastFileId(activeFile.id);
-    setMessages([
-      {
-        role: "ai",
-        content: `I have successfully loaded "${activeFile.originalName}". What would you like to discuss about this document?`,
-      },
-    ]);
-  }
 
   const handleSend = async () => {
-    if (!input.trim() || isAiTyping || !activeFile) return;
+    if (!input.trim() || isResponding) return;
 
     const userMessage = input.trim();
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setInput("");
 
     try {
-      const response = await askQuestion({
-        question: userMessage,
-        collectionId: activeFile.id,
-      }).unwrap();
-
+      const response = await askQuestion({ question: userMessage, userId }).unwrap();
       if (response.success && response.answer) {
         setMessages((prev) => [...prev, { role: "ai", content: response.answer }]);
       } else {
-        setMessages((prev) => [
-          ...prev,
-          { role: "ai", content: "I encountered an issue searching this document. Please try again." },
-        ]);
+        setMessages((prev) => [...prev, { role: "ai", content: "Sorry, I couldn't get a proper answer from the document." }]);
       }
     } catch (err: any) {
       console.error("Chat error:", err);
-      const errMsg = err?.data?.error || err?.message || "Failed to synthesize an answer.";
       setMessages((prev) => [
         ...prev,
-        { role: "ai", content: `Error: ${errMsg}. Make sure your local services (ChromaDB & Redis) are active and OpenRouter API key is configured.` },
+        { role: "ai", content: "Error: Failed to fetch a response from the document. Please try again." }
       ]);
     }
   };
@@ -71,7 +52,7 @@ export default function ChatArea({ isUploaded, activeFile }: ChatAreaProps) {
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">Start Discussion</h1>
             <p className="text-text">
-              Upload a file in the sidebar to start a discussion on it.
+              Upload the file to start discussion on it
             </p>
           </div>
         </div>
@@ -80,23 +61,14 @@ export default function ChatArea({ isUploaded, activeFile }: ChatAreaProps) {
           {/* Chat Header */}
           <div className="p-4 bg-background border-b border-border flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                <Bot className="h-5 w-5" />
+              <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold">
+                AI
               </div>
               <div>
                 <h2 className="font-semibold text-foreground">Document Assistant</h2>
-                <div className="flex items-center text-xs text-secondary-foreground truncate max-w-xs md:max-w-md">
-                  {activeFile ? (
-                    <span className="text-success font-medium flex items-center">
-                      <span className="w-1.5 h-1.5 bg-success rounded-full mr-1.5 animate-pulse"></span>
-                      Chatting with: <span className="ml-1 underline truncate max-w-[120px] md:max-w-[200px]" title={activeFile.originalName}>{activeFile.originalName}</span>
-                    </span>
-                  ) : (
-                    <span className="text-destructive font-medium flex items-center">
-                      <span className="w-1.5 h-1.5 bg-destructive rounded-full mr-1.5"></span>
-                      No document selected in sidebar
-                    </span>
-                  )}
+                <div className="flex items-center text-xs text-success">
+                  <span className="w-2 h-2 bg-success rounded-full mr-1"></span>
+                  Active
                 </div>
               </div>
             </div>
@@ -110,23 +82,24 @@ export default function ChatArea({ isUploaded, activeFile }: ChatAreaProps) {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[75%] p-4 rounded-2xl ${
-                    msg.role === "user"
+                  className={`max-w-[75%] p-4 rounded-2xl ${msg.role === "user"
                       ? "bg-primary text-primary-foreground rounded-br-none"
                       : "bg-secondary text-text border border-border rounded-bl-none shadow-sm"
-                  }`}
+                    }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <p className="text-sm">{msg.content}</p>
                 </div>
               </div>
             ))}
-            
-            {/* Thinking / Loader Indicator */}
-            {isAiTyping && (
+            {isResponding && (
               <div className="flex justify-start">
-                <div className="bg-secondary text-text border border-border rounded-2xl rounded-bl-none p-4 max-w-[75%] shadow-sm flex items-center space-x-2 animate-pulse">
-                  <Loader2 className="h-4 w-4 text-primary animate-spin" />
-                  <span className="text-sm font-medium">Searching document and generating answer...</span>
+                <div className="max-w-[75%] p-4 rounded-2xl bg-secondary text-text border border-border rounded-bl-none shadow-sm flex items-center space-x-2">
+                  <div className="flex space-x-1.5 py-1 px-0.5">
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce"></div>
+                  </div>
+                  <span className="text-xs text-secondary-foreground font-medium select-none ml-1">AI is thinking...</span>
                 </div>
               </div>
             )}
@@ -137,29 +110,17 @@ export default function ChatArea({ isUploaded, activeFile }: ChatAreaProps) {
             <div className="flex items-center space-x-2">
               <input
                 type="text"
-                placeholder={
-                  !activeFile
-                    ? "Select a processed file to start chatting..."
-                    : isAiTyping
-                    ? "Waiting for response..."
-                    : `Ask a question about "${activeFile.originalName}"...`
-                }
+                placeholder="Ask something about the document..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleSend()}
-                disabled={!activeFile || isAiTyping}
-                className="flex-1 p-3 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex-1 p-3 bg-secondary border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-foreground"
               />
               <button
                 onClick={handleSend}
-                disabled={!activeFile || isAiTyping || !input.trim()}
-                className="p-3 bg-primary hover:opacity-90 text-primary-foreground rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-3 bg-primary hover:opacity-90 text-primary-foreground rounded-xl transition-colors"
               >
-                {isAiTyping ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <Send className="h-6 w-6" />
-                )}
+                <Send className="h-6 w-6" />
               </button>
             </div>
           </div>
